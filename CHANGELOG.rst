@@ -2,6 +2,10 @@
 ======
 Unreleased
 
+Features
+--------
+* Allow passing ssl context for Eventlet (PYTHON-1162)
+
 Bug Fixes
 ---------
 * Connection setup methods prevent using ExecutionProfile in cqlengine (PYTHON-1009)

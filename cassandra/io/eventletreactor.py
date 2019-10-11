@@ -16,7 +16,6 @@
 # Originally derived from MagnetoDB source:
 #   https://github.com/stackforge/magnetodb/blob/2015.1.0b1/magnetodb/common/cassandra/io/eventletreactor.py
 import eventlet
-from eventlet.green.OpenSSL import SSL
 from eventlet.green import socket
 from eventlet.queue import Queue
 from greenlet import GreenletExit
@@ -27,9 +26,22 @@ import time
 from six.moves import xrange
 
 from cassandra.connection import Connection, ConnectionShutdown, Timer, TimerManager
+try:
+    from eventlet.green.OpenSSL import SSL
+    _PYOPENSSL = True
+except ImportError as no_pyopenssl_error:
+    _PYOPENSSL = False
 
 
 log = logging.getLogger(__name__)
+
+
+def _check_pyopenssl():
+    if not _PYOPENSSL:
+        raise ImportError(
+            "{}, pyOpenSSL must be installed to enable "
+            "SSL support with the Twisted event loop".format(str(no_pyopenssl_error))
+        )
 
 
 class EventletConnection(Connection):
@@ -93,6 +105,7 @@ class EventletConnection(Connection):
         if isinstance(self.ssl_context, eventlet.green.ssl.GreenSSLContext):
             super(EventletConnection, self)._wrap_socket_from_context()
         else:
+            _check_pyopenssl()
             self._socket = SSL.Connection(self.ssl_context, self._socket)
             self._socket.set_connect_state()
             if self.ssl_options and 'server_hostname' in self.ssl_options:

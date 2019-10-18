@@ -897,7 +897,7 @@ class ModelMetaClass(type):
         defined_columns = OrderedDict(column_definitions)
 
         # check for primary key
-        if not is_abstract and not any([v.primary_key for k, v in column_definitions]):
+        if not is_abstract and not any([v.primary_key for k, v in defined_columns.items()]):
             raise ModelDefinitionException("At least 1 primary key is required.")
 
         counter_columns = [c for c in defined_columns.values() if isinstance(c, columns.Counter)]
@@ -905,7 +905,7 @@ class ModelMetaClass(type):
         if counter_columns and data_columns:
             raise ModelDefinitionException('counter models may not have data columns')
 
-        has_partition_keys = any(v.partition_key for (k, v) in column_definitions)
+        has_partition_keys = any(v.partition_key for (k, v) in defined_columns.items())
 
         def _transform_column(col_name, col_obj):
             column_dict[col_name] = col_obj
@@ -917,7 +917,7 @@ class ModelMetaClass(type):
 
         partition_key_index = 0
         # transform column definitions
-        for k, v in column_definitions:
+        for k, v in defined_columns.items():
             # don't allow a column with the same name as a built-in attribute or method
             if k in BaseModel.__dict__:
                 raise ModelDefinitionException("column '{0}' conflicts with built-in attribute/method".format(k))
